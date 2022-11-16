@@ -6,9 +6,9 @@ namespace TareasMVC.Models
     {
         [Required(ErrorMessage = "El campo {0} es requerido")]
         [EmailAddress(ErrorMessage = "EL campo debe ser un correo electrénico valido")]
-        public string? Email { get; set; }
+        public string Email { get; set; }
         [Required(ErrorMessage = "El campo {0} es requerido")]
         [DataType(DataType.Password)]
-        public string? Password { get; set; }
+        public string Password { get; set; }
     }
 }

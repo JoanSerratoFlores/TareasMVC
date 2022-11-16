@@ -10,19 +10,19 @@ namespace TareasMVC.Controllers
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
 
-        public UsuariosController(UserManager<IdentityUser> userManager,
+        public UsuariosController(UserManager<IdentityUser>userManager,
             SignInManager<IdentityUser> signInManager)
-
         {
-            this.userManager = userManager; 
+            this.userManager = userManager;
             this.signInManager = signInManager;
-
         }
+
         [AllowAnonymous]
         public IActionResult Registro()
         {
             return View();
         }
+
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> Registro(RegistroViewModel modelo)
@@ -33,13 +33,12 @@ namespace TareasMVC.Controllers
             }
 
             var usuario = new IdentityUser() { Email = modelo.Email, UserName = modelo.Email };
-
             var resultado = await userManager.CreateAsync(usuario, password: modelo.Password);
 
             if (resultado.Succeeded)
             {
                 await signInManager.SignInAsync(usuario, isPersistent: true);
-                return RedirectToAction("Index","Home");
+                return RedirectToAction("Index", "Home");
             }
             else
             {

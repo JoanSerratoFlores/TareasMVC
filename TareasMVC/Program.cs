@@ -20,6 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
     opciones.UseSqlServer("name=DefaultConnection"));
 
 builder.Services.AddAuthentication();
+
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(opciones =>
 {
     opciones.SignIn.RequireConfirmedAccount = false;
@@ -47,7 +48,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
