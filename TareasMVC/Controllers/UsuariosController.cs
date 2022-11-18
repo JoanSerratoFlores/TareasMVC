@@ -2,21 +2,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using TareasMVC.Models;
+using TareasMVC.Servicios;
 
 namespace TareasMVC.Controllers
 {
-    public class UsuariosController:Controller
+    public class UsuariosController : Controller
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
+        private readonly ApplicationDbContext context;
 
-        public UsuariosController(UserManager<IdentityUser>userManager,
-            SignInManager<IdentityUser> signInManager)
+        public UsuariosController(UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager, ApplicationDbContext context)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.context = context;
         }
 
         [AllowAnonymous]
@@ -54,10 +58,10 @@ namespace TareasMVC.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult Login(string mensaje=null)
+        public IActionResult Login(string mensaje = null)
         {
-            if(mensaje is not null)
-                {
+            if (mensaje is not null)
+            {
                 ViewData["mensaje"] = mensaje;
             }
             return View();
@@ -67,7 +71,7 @@ namespace TareasMVC.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel modelo)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return View(modelo);
             }
@@ -75,8 +79,8 @@ namespace TareasMVC.Controllers
             var resultado = await
                  signInManager.PasswordSignInAsync(modelo.Email,
                  modelo.Password, modelo.Recuerdame, lockoutOnFailure: false);
-            
-            if(resultado.Succeeded)
+
+            if (resultado.Succeeded)
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -88,7 +92,7 @@ namespace TareasMVC.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult>Logout()
+        public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             return RedirectToAction("Index", "Home");
@@ -96,7 +100,7 @@ namespace TareasMVC.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public ChallengeResult LoginExterno(string proveedor,string urlRetorno=null)
+        public ChallengeResult LoginExterno(string proveedor, string urlRetorno = null)
         {
             var urlRedirection = Url.Action("RegistrarUsuarioExterno", values: new { urlRetorno });
             var propiedades = signInManager.
@@ -105,35 +109,35 @@ namespace TareasMVC.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult>RegistrarUsuarioExterno(string urlRetorno = null,
-            string remoteError =  null)
+        public async Task<IActionResult> RegistrarUsuarioExterno(string urlRetorno = null,
+            string remoteError = null)
         {
             urlRetorno = urlRetorno ?? Url.Content("~/");
             var mensaje = "";
-            if(remoteError is not null)
+            if (remoteError is not null)
             {
-                mensaje= $"Error del proveedor externo: {remoteError}";
+                mensaje = $"Error del proveedor externo: {remoteError}";
                 return RedirectToAction("login", routeValues: new { mensaje });
             }
             var info = await signInManager.GetExternalLoginInfoAsync();
-            if(info is null)
+            if (info is null)
             {
                 mensaje = "Error cargando la data de login externo";
                 return RedirectToAction("login", routeValues: new { mensaje });
             }
             var resultadoLoginExterno = await signInManager.ExternalLoginSignInAsync(info.LoginProvider,
-                info.ProviderKey,isPersistent:true,bypassTwoFactor:true);
+                info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
 
             //Ya la cuenta existe
 
-            if(resultadoLoginExterno.Succeeded)
+            if (resultadoLoginExterno.Succeeded)
             {
                 return LocalRedirect(urlRetorno);
             }
 
             string email = "";
 
-            if(info.Principal.HasClaim(c=>c.Type==ClaimTypes.Email))
+            if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
             {
                 email = info.Principal.FindFirstValue(ClaimTypes.Email);
             }
@@ -146,7 +150,7 @@ namespace TareasMVC.Controllers
             var usuario = new IdentityUser { Email = email, UserName = email };
             var resultadoCrearUsuario = await userManager.CreateAsync(usuario);
 
-            if(!resultadoCrearUsuario.Succeeded)
+            if (!resultadoCrearUsuario.Succeeded)
             {
                 mensaje = resultadoCrearUsuario.Errors.First().Description;
                 return RedirectToAction("login", routeValues: new { mensaje });
@@ -154,7 +158,7 @@ namespace TareasMVC.Controllers
 
             var resultadoAgregarLogin = await userManager.AddLoginAsync(usuario, info);
 
-            if(resultadoAgregarLogin.Succeeded)
+            if (resultadoAgregarLogin.Succeeded)
             {
                 await signInManager.SignInAsync(usuario, isPersistent: true, info.LoginProvider);
                 return LocalRedirect(urlRetorno);
@@ -163,6 +167,58 @@ namespace TareasMVC.Controllers
             mensaje = "Ha ocurrido un error agregando el login";
             return RedirectToAction("login", routeValues: new { mensaje });
         }
+
+        [HttpGet]
+        [Authorize(Roles =Constantes.RolAdmin)]
+        public async Task<IActionResult> Listado(string mensaje = null)
+        {
+            var usuarios = await context.Users.Select(u => new UsuarioViewModel
+            {
+                Email = u.Email
+            }).ToListAsync();
+
+            var modelo = new UsuariosListadoViewModel();
+            modelo.Usuarios = usuarios;
+            modelo.Mensaje = mensaje;
+            return View(modelo);
+
+        }
+
+        [HttpPost]
+        [Authorize(Roles = Constantes.RolAdmin)]
+        public async Task<IActionResult> HacerAdmin(string email)
+        {
+            var usuario = await context.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (usuario is null)
+            {
+                return NotFound();
+            }
+
+            await userManager.AddToRoleAsync(usuario, Constantes.RolAdmin);
+
+            return RedirectToAction("Listado", 
+                routeValues:new { Mensaje = "Rol asignado correctamente a " + email });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = Constantes.RolAdmin)]
+        public async Task<IActionResult> RemoverAdmin(string email)
+        {
+            var usuario = await context.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+
+            if (usuario is null)
+            {
+                return NotFound();
+            }
+
+            await userManager.RemoveFromRoleAsync(usuario, Constantes.RolAdmin);
+
+            return RedirectToAction("Listado",
+                routeValues: new { Mensaje = "Rol removido correctamente a " + email });
+        }
+
+
 
     }
 }
