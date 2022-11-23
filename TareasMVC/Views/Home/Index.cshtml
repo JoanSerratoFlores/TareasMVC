@@ -40,6 +40,9 @@
     <script src="~/js/Tareas.js" asp-append-version="true"></script>
 
     <script>
+        
+        const urlTareas ="/api/tareas";
+
         function tareaListadoViewModelFn() {
             var self = this;
             self.tareas = ko.observableArray([]);
@@ -64,11 +67,13 @@
 
         const tareaListadoViewModel = new tareaListadoViewModelFn();
 
-        setTimeout(() => {
-            //Se va a ejecutar luego de 2 segundos
-            //tareaListadoViewModel.tareas.push({ titulo: 'Tarea 1' });
-            tareaListadoViewModel.cargando(false);
-        }, 100)
+        //setTimeout(() => {
+        //    //Se va a ejecutar luego de 2 segundos
+        //    //tareaListadoViewModel.tareas.push({ titulo: 'Tarea 1' });
+        //    tareaListadoViewModel.cargando(false);
+        //}, 100)
+
+obtenerTareas();
 
         ko.applyBindings(tareaListadoViewModel, document.getElementById('contenedor-listado-tareas'));
 
