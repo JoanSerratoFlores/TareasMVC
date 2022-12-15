@@ -6,8 +6,8 @@ namespace TareasMVC.Entidades
     public class Tarea
     {
         public int Id { get; set; }
-        //[StringLength(250)]
-        //[Required]
+        [StringLength(250)]
+        [Required]
         public string Titulo { get; set; }
         public string Descripcion { get; set; }
         public int Orden { get; set; }
@@ -15,5 +15,7 @@ namespace TareasMVC.Entidades
         public string UsuarioCreacionId { get; set; }
         public IdentityUser UsuarioCreacion { get; set; }
         public List<Paso> Pasos { get; set; }
+        public List<ArchivoAdjunto> ArchivosAdjuntos{ get; set; }
+
     }
 }
