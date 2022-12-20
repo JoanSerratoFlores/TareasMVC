@@ -157,7 +157,7 @@ async function editarTareaCompleta(tarea) {
 function intentarBorrarTarea(tarea) {
     modalEditarTareaBootstrap.hide();
     confirmarAccion({
-        callBackAceptar: () => {
+        callbackAceptar: () => {
             borrarTarea(tarea);
         },
         callbackCancelar: () => {
@@ -183,6 +183,11 @@ async function borrarTarea(tarea) {
 
 function obtenerIndiceTareaEnEdicion() {
     return tareaListadoViewModel.tareas().findIndex(t => t.id() == tareaEditarVM.id);
+}
+
+function obtenerTareaEnEdicion() {
+    const indice = obtenerIndiceTareaEnEdicion();
+    return tareaListadoViewModel.tareas()[indice];
 }
 
 $(function () {
