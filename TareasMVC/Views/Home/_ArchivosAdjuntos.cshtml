@@ -1,13 +1,22 @@
 ﻿<label><i class="bi bi-paperclip">Archivos Adjuntos</i></label>
 <button onclick="manejarClickAgregarArchivoAdjunto()"><i class="bi bi-plus"></i></button>
-<input type="file" id="archivoATarea" multiple style="display:none" />
+<input type="file" 
+    onchange="manejarSeleccionArchivoTarea(event)"
+    id="archivoATarea" multiple style="display:none" />
 
 <div data-bind="foreach:archivosAdjuntos">
     <div>
-        <div style="cursor:pointer" data-bind="text:titulo"></div>
+        <div style="cursor:pointer" class="fw-bold" data-bind="text:titulo,
+            hidden:modoEdicion,click:manejarClickTituloArchivoAdjunto"></div>
+        
+        <div data-bind="visible:modoEdicion,event:{focusout:manejarFocusoutTituloArchivoAdjunto}">
+            <input name="txtArchivoAdjuntoTitulo" type="text" class="form-control"
+            data-bind="value:titulo,attr:{'data-id':id}"/>
+        </div>
+        
         <div>
             Agregado 
-            <span>data-bind="text:publicado"</span> - 
+            <span data-bind="text:publicado"></span> - 
                 <span class="fw-bold" style="cursor:pointer">Borrar</span> -
                 <span class="fw-bold" style="cursor:pointer">Descargar</span>
         </div>

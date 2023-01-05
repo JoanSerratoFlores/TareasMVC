@@ -5,6 +5,7 @@ using TareasMVC.Servicios;
 
 namespace TareasMVC.Controllers
 {
+    [Route("api/archivos")]
     public class ArchivosController:ControllerBase
     {
         private readonly ApplicationDbContext context;
@@ -62,6 +63,28 @@ namespace TareasMVC.Controllers
 
         }
 
+        [HttpPut("{id}")]
+        public async Task <IActionResult> Put (Guid id, [FromBody] string titulo)
+        {
+            var usuarioId = servicioUsuarios.ObtenerUsuarioId();
+
+            var archivoAdjunto = await context
+                .ArchivoAdjuntos.Include(a => a.Tarea).FirstOrDefaultAsync(a => a.Id == id);
+
+            if(archivoAdjunto is null)
+            {
+                return NotFound();
+            }
+
+            if(archivoAdjunto.Tarea.UsuarioCreacionId != usuarioId)
+            {
+                return Forbid();
+            }
+
+            archivoAdjunto.Titulo = titulo;
+            await context.SaveChangesAsync();
+            return Ok();
+        }
 
     }
 }
