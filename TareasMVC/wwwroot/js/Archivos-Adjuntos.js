@@ -78,3 +78,34 @@ async function manejarFocusoutTituloArchivoAdjunto(archivoAdjunto) {
         manejarErrorApi(respuesta);
     }
 }
+
+function manejarClickBorrarArchivoAdjunto(archivoAdjunto) {
+    modalEditarTareaBootstrap.hide();
+
+    confirmarAccion({
+        callbackAceptar: () => {
+            borrarArchivoAdjunto(archivoAdjunto);
+            modalEditarTareaBootstrap.show();
+        },
+        callbackCancelar: () => {
+            modalEditarTareaBootstrap.show();
+        },
+        titulo: 'Desea borrar este archivo adjunto?'
+    });
+}
+
+async function borrarArchivoAdjunto(archivoAdjunto) {
+    const respuesta = await fetch(`${urlArchivos}/${archivoAdjunto.id}`, {
+        method: 'DELETE'
+    });
+
+    if (!respuesta.ok) {
+        manejarErrorApi(respuesta);
+        return;
+    }
+    tareaEditarVM.archivosAdjuntos.remove(function (item) { return item.id == archivoAdjunto.id });
+}
+
+function manejarClickDescargarArchivoAdjunto(archivoAdjunto) {
+    descargarArchivo(archivoAdjunto.url, archivoAdjunto.titulo());
+}
